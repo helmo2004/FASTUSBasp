@@ -117,22 +117,21 @@ main()
 
    clock_setup();
 
-   //This is required if proper pullup is not present at D+ line.
-   // This is must for chinese stm32f103c8t6 aka "blue pill"
-   // set USBDPLUS_WRONG_PULLUP to 1 if blue pill has wrong pullup at D+ line
-   // This code is disabled by default.
-#if USBDPLUS_WRONG_PULLUP == 1
+   // re-enumeration: Pull D+ to low for 10ms and release it after
+   // This is very useful after flashing when device is plugged-in
    gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_2_MHZ,
                  GPIO_CNF_OUTPUT_PUSHPULL, GPIO12);
    gpio_clear(GPIOA, GPIO12);
-   msleep(5);
-#endif
+   msleep(10);
+   gpio_set_mode(GPIOA, GPIO_MODE_INPUT,
+                 GPIO_CNF_INPUT_FLOAT, GPIO12);
 
    // USB initialization
    usbd_dev = usbd_init(&st_usbfs_v1_usb_driver, &dev_descr, &config,
                         usb_strings, 2, usbd_control_buffer,
                         sizeof(usbd_control_buffer));
    usbd_register_set_config_callback(usbd_dev, set_config);
+
 
 #ifdef DEBUG
    usart1_println("usb init");
